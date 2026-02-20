@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار سرعة الكتابة | Typing Speed Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;600&family=JetBrains+Mono:wght@400;500&display=swap');
+        
+        body {
+            font-family: 'IBM+Plex+Sans+Arabic', sans-serif;
+            background-color: #020617;
+            color: #e2e8f0;
+        }
+
+        .mono {
+            font-family: 'JetBrains+Mono', monospace;
+        }
+
+        /* تحسين شكل المؤشر (Cursor) */
+        .cursor {
+            border-left: 3px solid #06b6d4; /* Teal color */
+            animation: blink 0.8s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        /* ألوان الحروف في الوضع الليلي */
+        .char-correct { color: #22d3ee; } /* Bright Cyan */
+        .char-incorrect { color: #fb7185; background-color: rgba(251, 113, 133, 0.2); border-radius: 2px; } /* Rose */
+        .char-current { background-color: rgba(139, 92, 246, 0.2); color: #a78bfa; } /* Violet highlight */
+        /*
+        .ltr { dir: ltr; text-align: left; }
+        .rtl { dir: rtl; text-align: right; }
+        */
+        /* تخصيص شريط التمرير */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #4f46e5; border-radius: 10px; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
+
+    <!-- Header & Controls -->
+    <div class="max-w-4xl w-full flex justify-between items-center mb-8">
+        <h1 id="title" class="text-3xl font-extrabold bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent">اختبار سرعة الكتابة</h1>
+        <div class="flex gap-4">
+            <!-- Language Toggle -->
+            <button id="langToggle" class="px-5 py-2 rounded-xl bg-slate-900 border border-slate-700 hover:border-violet-500 hover:text-violet-400 transition-all shadow-lg text-sm font-semibold">
+                English
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats Panel -->
+    <div class="max-w-4xl w-full grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-slate-900 p-5 rounded-2xl shadow-xl border border-slate-800 border-b-4 border-violet-500">
+            <p id="labelTime" class="text-xs uppercase tracking-wider text-slate-500 mb-1">الوقت</p>
+            <p id="timeVal" class="text-2xl font-bold mono text-white">0s</p>
+        </div>
+        <div class="bg-slate-900 p-5 rounded-2xl shadow-xl border border-slate-800 border-b-4 border-cyan-500">
+            <p id="labelWpm" class="text-xs uppercase tracking-wider text-slate-500 mb-1">WPM (سرعة)</p>
+            <p id="wpmVal" class="text-2xl font-bold mono text-white">0</p>
+        </div>
+        <div class="bg-slate-900 p-5 rounded-2xl shadow-xl border border-slate-800 border-b-4 border-emerald-500">
+            <p id="labelAccuracy" class="text-xs uppercase tracking-wider text-slate-500 mb-1">الدقة</p>
+            <p id="accuracyVal" class="text-2xl font-bold mono text-white">100%</p>
+        </div>
+        <div class="bg-slate-900 p-5 rounded-2xl shadow-xl border border-slate-800 border-b-4 border-rose-500">
+            <p id="labelErrors" class="text-xs uppercase tracking-wider text-slate-500 mb-1">الأخطاء</p>
+            <p id="errorsVal" class="text-2xl font-bold mono text-rose-400">0</p>
+        </div>
+    </div>
+
+    <!-- Typing Area -->
+    <div class="max-w-4xl w-full relative group">
+        <div id="textDisplay" class="bg-slate-900 p-10 rounded-3xl shadow-2xl border border-slate-800 focus-within:border-violet-500/50 transition-all text-2xl leading-relaxed mono select-none h-72 overflow-y-auto mb-8 text-slate-300">
+            <!-- Text injected here -->
+        </div>
+        <textarea id="hiddenInput" class="absolute inset-0 opacity-0 cursor-default" autofocus autocomplete="off" capitalize="none"></textarea>
+        
+        <div id="focusWarning" class="absolute inset-0 flex items-center justify-center bg-slate-950/60 backdrop-blur-sm rounded-3xl opacity-0 group-focus-within:hidden pointer-events-none transition-all">
+            <p id="clickToStart" class="bg-gradient-to-r from-violet-600 to-indigo-600 text-white px-8 py-4 rounded-2xl shadow-2xl font-bold transform -rotate-1">انقر هنا لبدء التحدي</p>
+        </div>
+    </div>
+
+    <!-- Footer Controls -->
+    <div class="max-w-4xl w-full flex justify-center gap-4">
+        <button id="resetBtn" class="flex items-center gap-3 px-10 py-4 bg-slate-900 border border-slate-700 hover:border-violet-500 text-slate-200 hover:text-white rounded-2xl font-bold transition-all active:scale-95 shadow-lg">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+            <span id="btnText">إعادة الاختبار</span>
+        </button>
+    </div>
+
+    <script>
+        const texts = {
+            ar: [
+                "إن سرعة الكتابة مهارة أساسية في العصر الرقمي تتيح لك التعبير عن أفكارك بفعالية.",
+                "القراءة تغذي العقل وتفتح آفاقاً جديدة للمعرفة وتطور القدرات الفكرية للإنسان بشكل مستمر.",
+                "التحدي الحقيقي هو أن تتفوق على نفسك كل يوم وتتعلم من أخطائك لتصبح نسخة أفضل.",
+                "تعتبر البرمجة لغة العصر الحديث وهي وسيلة قوية لحل المشكلات وابتكار الحلول التقنية."
+            ],
+            en: [
+                "The quick brown fox jumps over the lazy dog in a display of incredible speed and agility.",
+                "Programming is not just about writing code, it is about solving complex problems efficiently.",
+                "Consistency is the key to mastering any skill, including the ability to type fast and accurately.",
+                "Nature provides a sense of peace and tranquility that is often hard to find in the busy city life."
+            ]
+        };
+
+        const translations = {
+            ar: {
+                title: "اختبار سرعة الكتابة",
+                labelTime: "الوقت المستغرق",
+                labelWpm: "الكلمات/دقيقة",
+                labelAccuracy: "نسبة الدقة",
+                labelErrors: "عدد الأخطاء",
+                clickToStart: "انقر هنا لبدء التحدي",
+                btnText: "إعادة الاختبار",
+                langBtn: "English",
+                dir: "rtl"
+            },
+            en: {
+                title: "Typing Speed Test",
+                labelTime: "Time Elapsed",
+                labelWpm: "WPM Speed",
+                labelAccuracy: "Accuracy",
+                labelErrors: "Mistakes",
+                clickToStart: "Click here to start challenge",
+                btnText: "Restart Test",
+                langBtn: "العربية",
+                dir: "ltr"
+            }
+        };
+
+        let currentLang = 'ar';
+        let targetText = "";
+        let startTime = null;
+        let timerInterval = null;
+        let isFinished = false;
+
+        const textDisplay = document.getElementById('textDisplay');
+        const hiddenInput = document.getElementById('hiddenInput');
+        const timeVal = document.getElementById('timeVal');
+        const wpmVal = document.getElementById('wpmVal');
+        const accuracyVal = document.getElementById('accuracyVal');
+        const errorsVal = document.getElementById('errorsVal');
+        const resetBtn = document.getElementById('resetBtn');
+        const langToggle = document.getElementById('langToggle');
+
+        function init() {
+            const t = translations[currentLang];
+            document.documentElement.dir = t.dir;
+            document.getElementById('title').innerText = t.title;
+            document.getElementById('labelTime').innerText = t.labelTime;
+            document.getElementById('labelWpm').innerText = t.labelWpm;
+            document.getElementById('labelAccuracy').innerText = t.labelAccuracy;
+            document.getElementById('labelErrors').innerText = t.labelErrors;
+            document.getElementById('clickToStart').innerText = t.clickToStart;
+            document.getElementById('btnText').innerText = t.btnText;
+            langToggle.innerText = t.langBtn;
+
+            if (currentLang === 'en') {
+                textDisplay.classList.remove('rtl');
+                textDisplay.classList.add('ltr');
+            } else {
+                textDisplay.classList.remove('ltr');
+                textDisplay.classList.add('rtl');
+            }
+
+            resetGame();
+        }
+
+        function resetGame() {
+            clearInterval(timerInterval);
+            startTime = null;
+            isFinished = false;
+            
+            timeVal.innerText = "0s";
+            wpmVal.innerText = "0";
+            accuracyVal.innerText = "100%";
+            errorsVal.innerText = "0";
+            hiddenInput.value = "";
+            textDisplay.classList.remove('ring-4', 'ring-emerald-500/50');
+            
+            const pool = texts[currentLang];
+            targetText = pool[Math.floor(Math.random() * pool.length)];
+            
+            renderText();
+            hiddenInput.focus();
+        }
+
+        function renderText() {
+            const userInput = hiddenInput.value;
+            textDisplay.innerHTML = "";
+            
+            targetText.split("").forEach((char, index) => {
+                const span = document.createElement("span");
+                if (index < userInput.length) {
+                    span.className = (userInput[index] === char) ? "char-correct" : "char-incorrect";
+                } else if (index === userInput.length) {
+                    span.className = "char-current cursor";
+                }
+                span.innerText = char;
+                textDisplay.appendChild(span);
+            });
+        }
+
+        function updateStats() {
+            if (!startTime) return;
+            
+            const now = new Date();
+            const timeElapsed = (now - startTime) / 1000;
+            const timeInMinutes = timeElapsed / 60;
+            
+            timeVal.innerText = Math.floor(timeElapsed) + "s";
+            
+            const userInput = hiddenInput.value;
+            let correctChars = 0;
+            let currentErrors = 0;
+            
+            for (let i = 0; i < userInput.length; i++) {
+                if (userInput[i] === targetText[i]) correctChars++;
+                else currentErrors++;
+            }
+            
+            const wpm = timeInMinutes > 0 ? Math.round((correctChars / 5) / timeInMinutes) : 0;
+            wpmVal.innerText = wpm;
+            errorsVal.innerText = currentErrors;
+            
+            const accuracy = userInput.length > 0 ? Math.round((correctChars / userInput.length) * 100) : 100;
+            accuracyVal.innerText = accuracy + "%";
+            
+            if (userInput.length >= targetText.length && !isFinished) {
+                isFinished = true;
+                clearInterval(timerInterval);
+                textDisplay.classList.add('ring-4', 'ring-emerald-500/50');
+            }
+        }
+
+        hiddenInput.addEventListener('input', () => {
+            if (isFinished) return;
+            if (!startTime && hiddenInput.value.length > 0) {
+                startTime = new Date();
+                timerInterval = setInterval(updateStats, 500);
+            }
+            renderText();
+            updateStats();
+        });
+
+        resetBtn.addEventListener('click', resetGame);
+        langToggle.addEventListener('click', () => { currentLang = currentLang === 'ar' ? 'en' : 'ar'; init(); });
+        textDisplay.addEventListener('click', () => hiddenInput.focus());
+
+        init();
+    </script>
+</body>
+</html>
